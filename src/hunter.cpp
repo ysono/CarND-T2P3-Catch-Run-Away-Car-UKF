@@ -40,14 +40,8 @@ public:
     double radius = v / yawdot;
     logger_ << "radius " << radius << endl;
 
-    double center_x, center_y;
-    if (yawdot > 0) {
-      center_x = px - radius * sin(yaw);
-      center_y = py + radius * cos(yaw);
-    } else {
-      center_x = px + radius * sin(yaw);
-      center_y = py - radius * cos(yaw);
-    }
+    double center_x = px - radius * sin(yaw);
+    double center_y = py + radius * cos(yaw);
     logger_ << "center is " << center_x << " " << center_y << endl;
 
     double angle_from_center_to_hunter = atan2(hunter_y - center_y, hunter_x - center_x);
@@ -61,7 +55,7 @@ public:
 
       // yawdot as in radians per simulation event, not radians per sec.
       double hunter_yawdot = (angle_from_center_to_target - angle_from_center_to_hunter);
-      // need to slow down as distance reduces, due to simulation's resolution.
+      // need to slow down as distance reduces, due to simulation's time resolution.
       hunter_yawdot /= 5;
       if (hunter_yawdot * yawdot > 0) {
         // if hunter would be chasing in the same direction, flip the direction.
