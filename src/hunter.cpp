@@ -47,23 +47,27 @@ public:
     double angle_from_center_to_hunter = atan2(hunter_y - center_y, hunter_x - center_x);
 
     double distance_between_hunter_and_center = sqrt(pow(center_y - hunter_y, 2) + pow(center_x - hunter_x, 2));
-    double distance_off_circumference_threshold = radius / 4;
+    double distance_off_circumference_threshold = radius * 2 / 3;
     if (abs(distance_between_hunter_and_center - radius) < distance_off_circumference_threshold) {
 
       // more accurate to rely on directly measured px and py than on UKF-implied yaw.
       double angle_from_center_to_target = atan2(py - center_y, px - center_x);
 
-      // yawdot as in radians per simulation event, not radians per sec.
-      double hunter_yawdot = (angle_from_center_to_target - angle_from_center_to_hunter);
-      // need to slow down as distance reduces, due to simulation's time resolution.
-      hunter_yawdot /= 5;
-      if (hunter_yawdot * yawdot > 0) {
+      // delta yaw is in radians per simulation event, not radians per sec.
+      double hunter_delta_yaw = (angle_from_center_to_target - angle_from_center_to_hunter);
+      if (hunter_delta_yaw * yawdot > 0) {
         // if hunter would be chasing in the same direction, flip the direction.
-        hunter_yawdot *= -1;
+        if (hunter_delta_yaw > 0) {
+          hunter_delta_yaw -= 2 * M_PI;
+        } else {
+          hunter_delta_yaw += 2 * M_PI;
+        }
       }
-      logger_ << "hunter_hawdot " << hunter_yawdot << endl;
+      // need to slow down as distance reduces, due to sensors' time resolution.
+      hunter_delta_yaw /= 3;
+      logger_ << "hunter_hawdot " << hunter_delta_yaw << endl;
 
-      angle_from_center_to_hunter += hunter_yawdot;
+      angle_from_center_to_hunter += hunter_delta_yaw;
     }
 
     double target_x = center_x + radius * cos(angle_from_center_to_hunter);
